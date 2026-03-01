@@ -1,0 +1,1 @@
+export { DOMObserver } from './observer';
