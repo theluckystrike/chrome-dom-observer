@@ -5,6 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Discord](https://img.shields.io/badge/Discord-Zovo-blueviolet.svg?logo=discord)](https://discord.gg/zovo)
 [![Website](https://img.shields.io/badge/Website-zovo.one-blue)](https://zovo.one)
+[![GitHub Stars](https://img.shields.io/github/stars/theluckystrike/chrome-dom-observer?style=social)](https://github.com/theluckystrike/chrome-dom-observer)
 
 > MutationObserver wrapper for Chrome extensions -- watch DOM changes, element appearance, attribute mutations, and debounced callbacks for MV3.
 
@@ -122,3 +123,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - [Zovo Focus](https://chrome.google.com/webstore/detail/zovo-focus) - Block distractions
 
 Visit [zovo.one](https://zovo.one) for more information.
+
+---
+
+Built by [Zovo](https://zovo.one)
