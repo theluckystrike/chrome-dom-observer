@@ -1,29 +1,10 @@
-# chrome-dom-observer — MutationObserver Wrapper
+# chrome-dom-observer
 
-[![npm version](https://img.shields.io/npm/v/chrome-dom-observer)](https://npmjs.com/package/chrome-dom-observer)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Chrome Web Extension](https://img.shields.io/badge/Chrome-Web%20Extension-orange.svg)](https://developer.chrome.com/docs/extensions/)
-[![CI Status](https://github.com/theluckystrike/chrome-dom-observer/actions/workflows/ci.yml/badge.svg)](https://github.com/theluckystrike/chrome-dom-observer/actions)
-[![Discord](https://img.shields.io/badge/Discord-Zovo-blueviolet.svg?logo=discord)](https://discord.gg/zovo)
-[![Website](https://img.shields.io/badge/Website-zovo.one-blue)](https://zovo.one)
-[![GitHub Stars](https://img.shields.io/github/stars/theluckystrike/chrome-dom-observer?style=social)](https://github.com/theluckystrike/chrome-dom-observer)
+> MutationObserver wrapper for Chrome extensions -- watch DOM changes, element appearance, attribute mutations, and debounced callbacks for MV3.
 
-> Watch DOM changes, wait for elements, attribute/text mutations, and debounced callbacks.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**chrome-dom-observer** provides a MutationObserver wrapper for Chrome extensions. Watch DOM changes, wait for elements, track attribute and text mutations, with debounced callbacks.
-
-Part of the [Zovo](https://zovo.one) developer tools family.
-
-## Features
-
-- ✅ **DOM Watching** - Monitor DOM changes
-- ✅ **Element Wait** - Wait for elements to appear
-- ✅ **Mutation Tracking** - Track attribute/text changes
-- ✅ **Debouncing** - Debounced callbacks
-- ✅ **TypeScript Support** - Full type definitions included
-
-## Installation
+## Install
 
 ```bash
 npm install chrome-dom-observer
@@ -31,53 +12,80 @@ npm install chrome-dom-observer
 
 ## Usage
 
-```typescript
+```ts
 import { DOMObserver } from 'chrome-dom-observer';
 
-const obs = new DOMObserver();
+const observer = new DOMObserver();
 
-// Watch for element appearance
-obs.onAppear('.dynamic-content', (els) => {
-  els.forEach(process);
+// Watch for elements appearing in the DOM
+observer
+  .onAppear('.notification-badge', (elements) => {
+    console.log(`Found ${elements.length} badges`);
+  })
+  .onAppear('#chat-panel', (elements) => {
+    console.log('Chat panel loaded');
+  })
+  .start();
+
+// Wait for a specific element with a timeout
+try {
+  const el = await observer.waitFor('.dynamic-content', 5000);
+  console.log('Element found:', el);
+} catch (err) {
+  console.error('Element did not appear in time');
+}
+
+// Watch attribute changes on elements
+observer.watchAttributes('.status-indicator', (el, attr, oldValue) => {
+  console.log(`Attribute "${attr}" changed from "${oldValue}" to "${el.getAttribute(attr)}"`);
 });
 
-// Wait for element
-const el = await obs.waitFor('#lazy-widget', 5000);
+// Watch text content changes
+observer.watchText('.live-counter', (el, newText) => {
+  console.log('Counter updated:', newText);
+});
 
-// Start observing
-obs.start();
+// Create a debounced observer for batch DOM changes
+const debounced = DOMObserver.debounced(() => {
+  console.log('DOM settled after rapid changes');
+}, 200);
+
+// Stop observing when done
+observer.stop();
 ```
 
-## Contributing
+## API
 
-Contributions are welcome! Please follow these steps:
+### `class DOMObserver`
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/observer-feature`
-3. **Make** your changes
-4. **Test** your changes: `npm test`
-5. **Commit** your changes: `git commit -m 'Add new feature'`
-6. **Push** to the branch: `git push origin feature/observer-feature`
-7. **Submit** a Pull Request
+#### `onAppear(selector: string, callback: (elements: Element[]) => void): this`
 
-## See Also
+Register a callback for when elements matching `selector` appear in the DOM. If matching elements already exist, the callback fires immediately. Returns `this` for chaining.
 
-### Related Zovo Repositories
+#### `start(root?: Element): this`
 
-- [chrome-page-info](https://github.com/theluckystrike/chrome-page-info) - Page data extraction
-- [webext-element-picker](https://github.com/theluckystrike/webext-element-picker) - Element selector
+Start observing DOM mutations. Optionally pass a `root` element to scope observation (defaults to `document.body`). Returns `this` for chaining.
 
-### Zovo Chrome Extensions
+#### `watchAttributes(selector: string, callback: (el: Element, attr: string, oldValue: string | null) => void): this`
 
-- [Zovo Tab Manager](https://chrome.google.com/webstore/detail/zovo-tab-manager) - Manage tabs efficiently
-- [Zovo Focus](https://chrome.google.com/webstore/detail/zovo-focus) - Block distractions
+Observe attribute changes on elements matching `selector`. The callback receives the element, the changed attribute name, and the previous value. Returns `this` for chaining.
 
-Visit [zovo.one](https://zovo.one) for more information.
+#### `watchText(selector: string, callback: (el: Element, newText: string) => void): this`
+
+Observe text content changes on elements matching `selector`. The callback receives the element and its new text content. Returns `this` for chaining.
+
+#### `waitFor(selector: string, timeoutMs?: number): Promise<Element>`
+
+Returns a promise that resolves when an element matching `selector` appears in the DOM. Times out after `timeoutMs` milliseconds (default: `10000`). Rejects with an error on timeout.
+
+#### `stop(): void`
+
+Disconnect the observer and stop watching for DOM mutations.
+
+#### `static debounced(callback: () => void, delayMs?: number): MutationObserver`
+
+Create a `MutationObserver` that fires the callback only after DOM mutations have settled for `delayMs` milliseconds (default: `100`). Returns the raw `MutationObserver` instance.
 
 ## License
 
-MIT — [Zovo](https://zovo.one)
-
----
-
-*Built by developers, for developers. No compromises on privacy.*
+MIT
