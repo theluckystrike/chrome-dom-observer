@@ -3,28 +3,26 @@
 [![npm version](https://img.shields.io/npm/v/chrome-dom-observer)](https://npmjs.com/package/chrome-dom-observer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Discord](https://img.shields.io/badge/Discord-Zovo-blueviolet.svg?logo=discord)](https://discord.gg/zovo)
-[![Website](https://img.shields.io/badge/Website-zovo.one-blue)](https://zovo.one)
 [![GitHub Stars](https://img.shields.io/github/stars/theluckystrike/chrome-dom-observer?style=social)](https://github.com/theluckystrike/chrome-dom-observer)
 
-> MutationObserver wrapper for Chrome extensions -- watch DOM changes, element appearance, attribute mutations, and debounced callbacks for MV3.
+A small MutationObserver wrapper built for Chrome extension content scripts. It handles element appearance, attribute changes, text mutations, and debounced callbacks without any dependencies.
 
-Part of the [Zovo](https://zovo.one) developer tools family.
+Designed for Manifest V3.
 
-## Install
+INSTALL
 
 ```bash
 npm install chrome-dom-observer
 ```
 
-## Usage
+USAGE
 
 ```ts
 import { DOMObserver } from 'chrome-dom-observer';
 
 const observer = new DOMObserver();
 
-// Watch for elements appearing in the DOM
+// React when elements appear in the DOM
 observer
   .onAppear('.notification-badge', (elements) => {
     console.log(`Found ${elements.length} badges`);
@@ -33,97 +31,94 @@ observer
     console.log('Chat panel loaded');
   })
   .start();
+```
 
-// Wait for a specific element with a timeout
+WAITING FOR AN ELEMENT
+
+```ts
 try {
   const el = await observer.waitFor('.dynamic-content', 5000);
   console.log('Element found:', el);
 } catch (err) {
   console.error('Element did not appear in time');
 }
+```
 
-// Watch attribute changes on elements
+The default timeout is 10 seconds. Pass a number in milliseconds to override it.
+
+WATCHING ATTRIBUTE CHANGES
+
+```ts
 observer.watchAttributes('.status-indicator', (el, attr, oldValue) => {
-  console.log(`Attribute "${attr}" changed from "${oldValue}" to "${el.getAttribute(attr)}"`);
+  console.log(`${attr} changed from ${oldValue} to ${el.getAttribute(attr)}`);
 });
+```
 
-// Watch text content changes
+Internally this creates a separate MutationObserver per selector with attributeOldValue enabled.
+
+WATCHING TEXT CONTENT
+
+```ts
 observer.watchText('.live-counter', (el, newText) => {
   console.log('Counter updated:', newText);
 });
+```
 
-// Create a debounced observer for batch DOM changes
+Uses characterData observation on subtree nodes. The callback receives the parent element matching the selector and its new textContent.
+
+DEBOUNCED OBSERVER
+
+```ts
 const debounced = DOMObserver.debounced(() => {
   console.log('DOM settled after rapid changes');
 }, 200);
+```
 
-// Stop observing when done
+Returns a raw MutationObserver that fires the callback only after mutations stop for the given delay (default 100ms). Useful for reacting to bulk DOM updates without thrashing.
+
+STOPPING
+
+```ts
 observer.stop();
 ```
 
-## API
+Disconnects the main observer. Attribute and text observers created by watchAttributes and watchText are independent and should be disconnected separately if needed.
 
-### `class DOMObserver`
+API REFERENCE
 
-#### `onAppear(selector: string, callback: (elements: Element[]) => void): this`
+DOMObserver
 
-Register a callback for when elements matching `selector` appear in the DOM. If matching elements already exist, the callback fires immediately. Returns `this` for chaining.
+onAppear(selector, callback) returns this
+Register a callback that fires when elements matching the selector appear in the DOM. If matching elements already exist at the time of registration, the callback fires immediately. Chainable.
 
-#### `start(root?: Element): this`
+start(root?) returns this
+Begin observing DOM mutations. Accepts an optional root element to scope observation. Defaults to document.body. Chainable.
 
-Start observing DOM mutations. Optionally pass a `root` element to scope observation (defaults to `document.body`). Returns `this` for chaining.
+watchAttributes(selector, callback) returns this
+Observe attribute changes on elements matching the selector. The callback receives the element, the attribute name, and the previous value. Chainable.
 
-#### `watchAttributes(selector: string, callback: (el: Element, attr: string, oldValue: string | null) => void): this`
+watchText(selector, callback) returns this
+Observe text content changes on elements matching the selector. The callback receives the element and its new text content. Chainable.
 
-Observe attribute changes on elements matching `selector`. The callback receives the element, the changed attribute name, and the previous value. Returns `this` for chaining.
+waitFor(selector, timeoutMs?) returns Promise of Element
+Returns a promise that resolves when an element matching the selector appears. Default timeout is 10000ms. Rejects on timeout.
 
-#### `watchText(selector: string, callback: (el: Element, newText: string) => void): this`
+stop() returns void
+Disconnect the main observer created by start.
 
-Observe text content changes on elements matching `selector`. The callback receives the element and its new text content. Returns `this` for chaining.
+DOMObserver.debounced(callback, delayMs?) returns MutationObserver
+Static method. Creates a MutationObserver that fires the callback only after DOM mutations settle for delayMs milliseconds (default 100). Observes document.body with childList and subtree.
 
-#### `waitFor(selector: string, timeoutMs?: number): Promise<Element>`
+LICENSE
 
-Returns a promise that resolves when an element matching `selector` appears in the DOM. Times out after `timeoutMs` milliseconds (default: `10000`). Rejects with an error on timeout.
+MIT. See LICENSE file.
 
-#### `stop(): void`
+CONTRIBUTING
 
-Disconnect the observer and stop watching for DOM mutations.
-
-#### `static debounced(callback: () => void, delayMs?: number): MutationObserver`
-
-Create a `MutationObserver` that fires the callback only after DOM mutations have settled for `delayMs` milliseconds (default: `100`). Returns the raw `MutationObserver` instance.
-
-## License
-
-MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Fork the repo, create a branch, open a pull request. Keep changes focused and include context in your commit messages.
 
 ---
 
-## See Also
+Built at [zovo.one](https://zovo.one)
 
-### Related Zovo Repositories
-
-- [chrome-extension-starter-mv3](https://github.com/theluckystrike/chrome-extension-starter-mv3) - Production-ready Chrome extension starter
-- [chrome-page-info](https://github.com/theluckystrike/chrome-page-info) - Page information extractor
-- [awesome-chrome-extensions-dev](https://github.com/theluckystrike/awesome-chrome-extensions-dev) - Curated list of Chrome extension development resources
-
-### Zovo Chrome Extensions
-
-- [Zovo Tab Manager](https://chrome.google.com/webstore/detail/zovo-tab-manager) - Manage tabs efficiently
-- [Zovo Focus](https://chrome.google.com/webstore/detail/zovo-focus) - Block distractions
-
-Visit [zovo.one](https://zovo.one) for more information.
-
----
-
-Built by [Zovo](https://zovo.one)
+[github.com/theluckystrike/chrome-dom-observer](https://github.com/theluckystrike/chrome-dom-observer)
